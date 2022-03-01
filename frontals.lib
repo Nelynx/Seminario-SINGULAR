@@ -1,0 +1,110 @@
+///////////////////////////////////////////////////////////////////////////////
+version="$Id: frontalsurf.lib  2013-12-03 $";
+category="Singularity Theory, Commutative Algebra, Contact Geometry";
+info="
+LIBRARY:	frontalsurf.lib			Compute geometric invariants of a corank 1
+									frontal surface
+
+AUTHORS:	Hannah Munoz-Cabello,	hamuca@outlook.com
+  
+PROCEDURES:
+	dp_scheme(p, q, vx, vy);		compute double point scheme
+	milnor(p, q, vx, vy);			compute frontal Milnor number
+	invariants(p, q, vx, vy);		compute geometric frontal invariants
+	stable_sing(p, q, vx, vy);		compute frontal stable singularities
+									(swallowtail, folded Whitney umbrella, A1A2 and triple point)
+ 
+AUXILIARY PROCEDURES:
+ ";
+
+	LIB "presmatrix.lib";
+
+//-------------------------------------------------------------------------------------------------
+proc dp_scheme(poly @p, poly @q, poly @x, poly @y)
+"USAGE:		dp_scheme(p,q,x,y);		p,q,x,y=poly
+COMPUTE:	source cuspidal edge and double point curves of the frontal surface
+			f(x,y)=(x,p(x,y),q(x,y)), as given in the article \"Singularities of
+			Frontal Surfaces\" by C. Munoz-Cabello, J.J. Nuno-Ballesteros, R. Oset-Sinha
+RETURN:   	source cuspidal edge and double point curves of f
+REMARK:  	This version of dp_scheme is only beta. Please send bugs and
+          	comments to: \"\" <hamuca@outlook.com> @*
+          	Known to work on Singular version 4.2.0.
+NOTE:		The proc creates several global objects with names all starting
+			with @, hence there should be no name conflicts.
+EXAMPLE:	example dp_scheme; shows an example"
+
+
+//-------------------------------------------------------------------------------------------------
+proc invariants(poly @p, poly @q, poly @x, poly @y)
+{
+	option(noredefine);			// hide messages such as "redefining"
+	string @srcring=nameof(basering);
+
+	execute("int @local=ord_test("+@srcring+")");
+	if (@local!=-1)
+		{
+			print("// No local order ring! Get generators using local order (ds)");
+		}
+
+	poly @cuspedge = dp_scheme(@srcring, @p, @q, @x, @y)[1];
+	poly @dpoints = dp_scheme(@srcring, @p, @q, @x, @y)[2];
+	
+	print("// The source curve of cuspidal edges is given by");
+	print("// 	@cuspedge = " + string(@cuspedge));
+	export(@cuspedge);
+	print("//");
+	print("// The source curve of strict double points is given by");
+	print("// 	@dpoints = " + string(@dpoints));
+	export(@dpoints);
+	print("//");
+	print("// To access these polynomials, type: ");
+	print("//");
+
+	int @S = stablesing(@srcring, @p, @q, @x, @y)[1];
+	int @W = stablesing(@srcring, @p, @q, @x, @y)[2];
+	int @K = stablesing(@srcring, @p, @q, @x, @y)[3];
+	int @T = stablesing(@srcring, @p, @q, @x, @y)[4];
+	
+	print("//	swallowtails: 				"+ string(@S));
+	print("//	folded Whitney umbrellas: 	"+ string(@W));
+	print("//	A1A2 singularities:			"+ string(@K));
+	print("//	transversal triple points:	"+ string(@T));
+		
+}
+//-------------------------------------------------------------------------------------------------
+
+static proc dp_scheme(ring @N, poly @p, poly @q, poly @x, poly @y)
+{
+	// add auxiliary variable @z to compute divided differences:
+	ring @auxring = 0, @z, ds;						
+	def @extring = @N + @auxring;
+	setring @extring;
+
+	// bring p and q to the new ring:
+	poly @p = imap(@srcring, @p);
+	poly @q = imap(@srcring, @q);
+
+	// compute the source cuspidal edge and double point equations
+	poly @P = (@p - subst(@p, @y, @z)) / (@y - @z);
+	poly @Q = (@q - subst(@q, @y, @z)) / (@y - @z);
+	poly @cuspedge = diff(@p, @y);
+	poly @dpoints = resultant(@P, @Q, @z) / @cuspedge ^ 2;
+
+	return(@cuspedge,@dpoints);
+}
+//--------------
+
+static proc stablesing(ring @N, poly @p, poly @q, poly @x, poly @y);
+{
+	ring @Z = 0, @X(1..3), ds;
+	setring @N;
+	map @f = @Z, @x, @p, @q;
+	ideal @I = 0;
+	presmatrix(@f, @I);
+	setring RTPr;
+	ideal @F2 = fitting(PM, 2);
+
+	return(@S, @W, @K, @T);
+}
+                                                         
+///////////////////////////////////////////////////////////////////////////////
