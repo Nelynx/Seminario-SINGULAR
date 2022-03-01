@@ -8,104 +8,126 @@ LIBRARY:	frontalsurf.lib			Compute geometric invariants of a corank 1
 AUTHORS:	C. Munoz-Cabello,		chmuca@alumni.uv.es
   
 PROCEDURES:
-	dp_scheme(p, q, vx, vy);		compute double point scheme
-	milnor(p, q, vx, vy);			compute frontal Milnor number
-	invariants(p, q, vx, vy);		compute geometric frontal invariants
-	stable_sing(p, q, vx, vy);		compute frontal stable singularities
-									(swallowtail, folded Whitney umbrella,
-									A1A2 and triple point)
+	invariants(p, q, x, y);			compute geometric frontal invariants
  
 AUXILIARY PROCEDURES:
  ";
 
+	// Required libraries
 	LIB "presmatrix.lib";
 
-//-------------------------------------------------------------------------------------------------
-proc dp_scheme(poly @p, poly @q, poly @x, poly @y)
-"USAGE:		dp_scheme(p,q,x,y);		p,q,x,y=poly
-COMPUTE:	source cuspidal edge and double point curves of the frontal surface
-			f(x,y)=(x,p(x,y),q(x,y)), as given in the article \"Singularities of
-			Frontal Surfaces\" by C. Munoz-Cabello, J.J. Nuno-Ballesteros, R. Oset-Sinha
-RETURN:   	source cuspidal edge and double point curves of f
-REMARK:  	This version of dp_scheme is only beta. Please send bugs and
+//-----------------------------------------------------------------------------
+proc invariants(poly @p, poly @q)
+//"USAGE:	invariants(p, q);		p,q=poly
+//COMPUTE:	
+//RETURN:   	
+//REMARK:  	This version of invariants is only beta. Please send bugs and
           	comments to: \"\" <chmuca@alumni.uv.es> @*
-          	Known to work on Singular version 4.2.0.
-NOTE:		The proc creates several global objects with names all starting
+          	Known to work on Singular version 4.2.0. 
+//NOTE:		The proc creates several global objects with names all starting
 			with @, hence there should be no name conflicts.
-EXAMPLE:	example dp_scheme; shows an example"
-
-
-//-------------------------------------------------------------------------------------------------
-proc invariants(poly @p, poly @q, poly @x, poly @y)
+//EXAMPLE:	example invariants; shows an example"
 {
-	option(noredefine);			// hide messages such as "redefining"
-	string @srcring=nameof(basering);
-
-	execute("int @local=ord_test("+@srcring+")");
-	if (@local!=-1)
-		{
-			print("// No local order ring! Get generators using local order (ds)");
-		}
-
-	poly @cuspedge = dp_scheme(@srcring, @p, @q, @x, @y)[1];
-	poly @dpoints = dp_scheme(@srcring, @p, @q, @x, @y)[2];
+	baseringlocal();
+	option(noredefine);		// hide messages such as "redefining"
+	ring @N = basering;
 	
-	print("// The source curve of cuspidal edges is given by");
-	print("// 	@cuspedge = " + string(@cuspedge));
-	export(@cuspedge);
-	print("//");
-	print("// The source curve of strict double points is given by");
-	print("// 	@dpoints = " + string(@dpoints));
-	export(@dpoints);
-	print("//");
-	print("// To access these polynomials, type: ");
-	print("//");
-
-	int @S = stablesing(@srcring, @p, @q, @x, @y)[1];
-	int @W = stablesing(@srcring, @p, @q, @x, @y)[2];
-	int @K = stablesing(@srcring, @p, @q, @x, @y)[3];
-	int @T = stablesing(@srcring, @p, @q, @x, @y)[4];
-	
-	print("//	swallowtails: 				"+ string(@S));
-	print("//	folded Whitney umbrellas: 	"+ string(@W));
-	print("//	A1A2 singularities:			"+ string(@K));
-	print("//	transversal triple points:	"+ string(@T));
-		
-}
-//-------------------------------------------------------------------------------------------------
-
-static proc dp_scheme(ring @N, poly @p, poly @q, poly @x, poly @y)
-{
 	// add auxiliary variable @z to compute divided differences:
 	ring @auxring = 0, @z, ds;						
 	def @extring = @N + @auxring;
 	setring @extring;
 
-	// bring p and q to the new ring:
-	poly @p = imap(@srcring, @p);
-	poly @q = imap(@srcring, @q);
+	poly @x = var(1);
+	poly @y = var(2);
+	
+	// check if p,q are a frontal
+	frontalmap(poly @p, poly @q, poly @x, poly @y);
 
-	// compute the source cuspidal edge and double point equations
+	// bring p and q to the new ring:
+	poly @p = imap(@N, @p);
+	poly @q = imap(@N, @q);
+
+	// compute divided differences
 	poly @P = (@p - subst(@p, @y, @z)) / (@y - @z);
 	poly @Q = (@q - subst(@q, @y, @z)) / (@y - @z);
+
+	// compute the source cuspidal edge and strict double point curves
 	poly @cuspedge = diff(@p, @y);
 	poly @dpoints = resultant(@P, @Q, @z) / @cuspedge ^ 2;
 
-	return(@cuspedge,@dpoints);
-}
-//--------------
+	print("// The source curve of cuspidal edges is given by");
+	print("// 	" + string(@cuspedge));
+	print("//");
+	print("// The source curve of strict double points is given by");
+	print("// 	" + string(@dpoints));
+	print("//");
+	
+	// compute identities () from [1]
+	setring @N;
+	poly @dpoints = imap(@extring, @dpoints);
+	int @A = vdim(std(@cuspedge, diff(@cuspedge,@y)));
+	int @B = vdim(std(@cuspedge, @dpoints));
 
-static proc stablesing(ring @N, poly @p, poly @q, poly @x, poly @y);
-{
+	// compute identity () from [1]
+	setring @extring;
+	poly @alpha = reduce(@P, @cuspedge);
+	poly @beta = reduce(@Q, @cuspedge);
+	int @C = vdim(std(@alpha, @beta, @py));
+
+	// compute identity () from [1]	
 	ring @Z = 0, @X(1..3), ds;
 	setring @N;
 	map @f = @Z, @x, @p, @q;
 	ideal @I = 0;
 	presmatrix(@f, @I);
 	setring RTPr;
-	ideal @F2 = fitting(PM, 2);
+	int @D = vdim(std(fitting(PM, 2)));
+	
+	print("//	swallowtails: 				"+ string(@Y[3]));
+	print("//	folded Whitney umbrellas: 	"+ string(@Y[4]));
+	print("//	A1A2 singularities:			"+ string(@Y[5]));
+	print("//	transversal triple points:	"+ string(@Y[6]));
+}
 
-	return(@S, @W, @K, @T);
+//-----------------------------------------------------------------------------
+static proc baseringlocal()
+{
+	option(noredefine);			// hide messages such as "redefining"
+	string @ring=nameof(basering);
+
+	execute("int @local=ord_test("+@ring+")");
+	if (@local!=-1)
+	{
+		ERROR("// No local order ring! Get generators using local order
+		(ds)");
+	}
+}
+
+//-----------------------------------------------------------------------------
+static proc frontalmap(poly @p, poly @q, poly @x, poly @y)
+{
+	if (reduce(diff(@p, @y), diff(@q, @y)) == 0)
+	{
+	return
+	}
+
+	if (reduce(diff(@p, @x), diff(@q, @x)) == 0)
+	{
+	return		
+	}
+	
+	if (reduce(diff(@q, @y), diff(@p, @y)) == 0)
+	{
+	return
+	}
+	
+	if (reduce(diff(@q, @x), diff(@p, @x)) == 0)
+	{
+	return	
+	}
+	
+	ERROR("// Not a frontal mapping! Please check "+string(@p)+" and "
+	+string(@q));
 }
                                                          
 ///////////////////////////////////////////////////////////////////////////////
