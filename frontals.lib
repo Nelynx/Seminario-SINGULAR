@@ -5,14 +5,15 @@ info="
 LIBRARY:	frontalsurf.lib			Compute geometric invariants of a corank 1
 									frontal surface
 
-AUTHORS:	Hannah Munoz-Cabello,	hamuca@outlook.com
+AUTHORS:	C. Munoz-Cabello,		chmuca@alumni.uv.es
   
 PROCEDURES:
 	dp_scheme(p, q, vx, vy);		compute double point scheme
 	milnor(p, q, vx, vy);			compute frontal Milnor number
 	invariants(p, q, vx, vy);		compute geometric frontal invariants
 	stable_sing(p, q, vx, vy);		compute frontal stable singularities
-									(swallowtail, folded Whitney umbrella, A1A2 and triple point)
+									(swallowtail, folded Whitney umbrella,
+									A1A2 and triple point)
  
 AUXILIARY PROCEDURES:
  ";
@@ -27,7 +28,7 @@ COMPUTE:	source cuspidal edge and double point curves of the frontal surface
 			Frontal Surfaces\" by C. Munoz-Cabello, J.J. Nuno-Ballesteros, R. Oset-Sinha
 RETURN:   	source cuspidal edge and double point curves of f
 REMARK:  	This version of dp_scheme is only beta. Please send bugs and
-          	comments to: \"\" <hamuca@outlook.com> @*
+          	comments to: \"\" <chmuca@alumni.uv.es> @*
           	Known to work on Singular version 4.2.0.
 NOTE:		The proc creates several global objects with names all starting
 			with @, hence there should be no name conflicts.
