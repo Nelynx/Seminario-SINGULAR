@@ -1,6 +1,3 @@
-* Descargar `gh` y `git`
-* 
-
 ### Usar `git` en un nuevo ordenador
 Utiliza el comando `gh auth login`.
 La CLI te ayudará a registrar tu cuenta de usuario Git en tu ordenador.
