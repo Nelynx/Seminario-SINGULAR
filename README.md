@@ -11,3 +11,5 @@ Librería de Singular para calcular invariantes geométricos de superficies fron
 - [ ] Añadir manpages para los _procedures_
 - [ ] Añadir texto que explique cómo funciona el código en más detalle
 
+## Instalación
+Ejecutar el comando `git clone https://github.com/Nelynx/Seminario-SINGULAR/tree/frontales/` en `$HOMEDIR`.
