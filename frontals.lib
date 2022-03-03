@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 version="$Id: frontalsurf.lib  2013-12-03 $";
-category="Singularity Theory, Commutative Algebra, Contact Geometry";
+category="Singularity Theory, Commutative Algebra";
 info="
 LIBRARY:	frontalsurf.lib			Compute geometric invariants of a corank 1
 									frontal surface
@@ -8,30 +8,87 @@ LIBRARY:	frontalsurf.lib			Compute geometric invariants of a corank 1
 AUTHORS:	C. Munoz-Cabello,		chmuca@alumni.uv.es
   
 PROCEDURES:
-	invariants(p, q, x, y);			compute geometric frontal invariants
+	dpscheme(p,q,y);				double point scheme of a frontal surface
+	invariants(p, q);				compute geometric frontal invariants
  
 AUXILIARY PROCEDURES:
+	baseringlocal();				checks if basering is local (ds)
+	ordering(p, q);					sets a corank 1 frontal in pre-normal form
  ";
 
 	// Required libraries
-	LIB "presmatrix.lib";
+//	LIB "presmatrix.lib";		// presmatrix
+	LIB "ring.lib";				// ord_test
+
+//-----------------------------------------------------------------------------
+proc dpscheme(poly @p, poly @q, int @y)
+{
+		// add an auxiliar variable for divided differences
+	ring @src = basering;
+	ring @auxring = 0, @z, ds;
+	def @extring = @src + @auxring;
+	setring @extring;
+
+		// import @p and @q to the extended ring
+	poly @p = imap(@src, @p);
+	poly @q = imap(@src, @q);
+
+		// compute the double point scheme via divided differences
+	poly @P = (@p - subst(@p, var(@y), @z)) / (var(@y) - @z);
+	poly @Q = (@q - subst(@q, var(@y), @z)) / (var(@y) - @z);
+
+		// find its branches
+	poly @cuspedge = diff(@p, var(@y));
+	poly @dpoints = resultant(@P, @Q, @z) / @py^2;
+
+	print("// Cuspidal edges:");
+	print("//	" + string(@cuspedge));
+	print("//");
+	print("// Strict double points:");
+	print("//	" + string(@dpoints));
+	print("//");
+
+		// export both functions to global scope
+	export(@cuspedge);
+	export(@dpoints);
+	
+	print("// Access these functions by typing @cuspedge and @dpoints");
+	print("// (address sign included!)")
+	
+		// compute formulas () from [1]
+	poly @alpha = reduce(@P, @py) / (var(@y) - @z);
+	poly @beta = reduce(@Q, @py) / (var(@y) - @z);
+	ideal @A = @py, @alpha, @beta;
+	int @vdimA = vdim(std(@A));
+
+	setring @src;
+	poly @py = imap(@extring, @py);
+	ideal @B = @py, diff(@py, var(@y));
+	
+	poly @tau = imap(@extring, @tau);
+	ideal @C = @py, @tau;
+
+	return(@vdimA,
+			vdim(std(@B)),
+			vdim(std(@C))
+			);
+}
 
 //-----------------------------------------------------------------------------
 proc invariants(poly @p_aux, poly @q_aux)
-/* "USAGE:	invariants(p, q);		p,q=poly
- * COMPUTE:	
- * RETURN:   	
- * REMARK:  	This version of invariants is only beta. Please send bugs and
-          	comments to: \"\" <chmuca@alumni.uv.es> @*
-          	Known to work on Singular version 4.2.0. 
- * NOTE:		The proc creates several global objects with names all starting
-			with @, hence there should be no name conflicts.
- * EXAMPLE:	example invariants; shows an example"
- */
+/*"USAGE:	invariants(p, q);		p,q=poly
+*COMPUTE:	
+*RETURN:   	
+*REMARK:  	This version of invariants is only beta. Please send bugs and
+*         	comments to: \"\" <chmuca@alumni.uv.es> @*
+*          	Known to work on Singular version 4.2.0. 
+*NOTE:		The proc creates several global objects with names all starting
+*			with @, hence there should be no name conflicts.
+*EXAMPLE:	example invariants; shows an example"
+*/
 {
 	baseringlocal();
 	option(noredefine);		// hide messages such as "redefining"
-	ring @N = basering;
 
 		/* sets the frontal so that p_y divides q_y
 		 * sigma[1] is the x variable
@@ -51,19 +108,15 @@ proc invariants(poly @p_aux, poly @q_aux)
 
 		// computations related to the double point scheme
 	dp_scheme(@p, @q, @sigma[2]);
-
-		// computations related to the target triple point space
-	ttp_space(@p, @q, @sigma[1]);
 }
 
 //-----------------------------------------------------------------------------
 static proc baseringlocal()
-	// Check whether the base ring is local.
 {
 	option(noredefine);			// hide messages such as "redefining"
-	string @ring=nameof(basering);
+	ring @ring=basering;
 
-	execute("int @local=ord_test("+@ring+")");
+	int @local=ord_test(@ring);
 	if (@local!=-1)
 	{
 		ERROR("// No local order ring! Get generators using local order
@@ -73,10 +126,6 @@ static proc baseringlocal()
 
 //-----------------------------------------------------------------------------
 static proc ordering(poly @p, poly @q)
-	/* A map (x,p(x,y),q(x,y)) is frontal iff p_y | q_y or q_y | p_y
-	 * (see [2], Proposition 3.4).
-	 * This procedure finds y and whether p_y | q_y or vice versa.
-	 */
 {
 		// py | qy -> change nothing
 	if (reduce(diff(@q, var(2)), diff(@p, var(2))) == 0)
@@ -86,11 +135,11 @@ static proc ordering(poly @p, poly @q)
 	if (reduce(diff(@q, var(1)), diff(@p, var(1))) == 0)
 		{return(2, 1, 3, 4);}
 
-		// qy | py -> swap (@p, @q)
+		// qy | py -> swap (p, q)
 	if (reduce(diff(@p, var(2)), diff(@q, var(2))) == 0)
 		{return(1, 2, 4, 3);}
 
-		// qx | px -> swap (@x, @y) and (@p, @q)
+		// qx | px -> swap (x, y) and (p, q)
 	if (reduce(diff(@p, var(1)), diff(@q, var(1))) == 0)
 		{return(2, 1, 4, 3);}
 	
@@ -98,70 +147,4 @@ static proc ordering(poly @p, poly @q)
 	+string(@q));
 }
 
-//-----------------------------------------------------------------------------
-static proc dp_scheme(poly @p, poly @q, int @y)
-	/* All computations related to the source double point scheme are in this
-	 * static procedure.
-	 */
-{
-		// add an auxiliar variable for divided differences
-	ring @N = basering;
-	ring @auxring = 0, @z, ds;
-	def @extring = @N + @auxring;
-	setring @extring;
-
-		// import @p and @q to the extended ring
-	poly @p = imap(@N, @p);
-	poly @q = imap(@N, @q);
-
-		// compute the double point scheme via divided differences
-	poly @P = (@p - subst(@p, var(@y), @z)) / (var(@y) - @z);
-	poly @Q = (@q - subst(@q, var(@y), @z)) / (var(@y) - @z);
-
-		// find its branches
-	poly @py = diff(@p, var(@y));
-	poly @tau = resultant(@P, @Q, @z) / @py^2;
-
-	print("// The source curve of cuspidal edges is given by");
-	print("//	" + string(@py));
-	print("//");
-	print("// The source curve of strict double points is given by");
-	print("//	" + string(@tau));
-
-
-		// compute formulas () from [1]
-	poly @alpha = reduce(@P, @py) / (var(@y) - @z);
-	poly @beta = reduce(@Q, @py) / (var(@y) - @z);
-		
-	int @A = vdim(std(@py, @alpha, @beta));
-	setring @N;
-	int @B = vdim(std(@py, @tau));
-	int @C = vdim(std(
-				@py, diff(@py, var(@y))
-				));
-
-	return(@A, @B, @C);
-}
-
-//-----------------------------------------------------------------------------
-static proc ttp_space(poly @p, poly @q, int @x)
-	/* All computations related to the target triple point space are in this
-	 * static procedure.
-	 */ 
-{
-		//see [3] for details
-	ring @N = basering;
-	ring @Z = 0, @X(1..3), ds;
-	setring @N;
-	
-	map @f = @Z, @x, @p, @q;
-	ideal @I = 0;
-	presmatrix(@f, @I);
-	
-	setring RTPr;
-	return(
-		vdim(std(fitting(PM, 2)))
-		);
-}
 ///////////////////////////////////////////////////////////////////////////////
-
