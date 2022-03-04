@@ -129,6 +129,13 @@ static proc dp_scheme(poly @p, poly @q, int @y)
 	poly @dpoints = imap(@extring, @tau);
 	ideal @C = @cuspedge, @dpoints;
 
+		// idea de guille: contar el número de cortes de las dos curvas
+		// los var son un hack sucio para poder eliminar la variable 
+		// que el resultante se carga y no tener vdim -1
+	ideal @mx = resultant(@cuspedge, @dpoints, var(@y)), var(@y);
+	ideal @my = resultant(@cuspedge, @dpoints, var(3-@y)), var(3-@y);
+
+
 	print("// Cuspidal edges:");
 	print("//	Equation: " + string(@cuspedge) + "= 0");
 	print("// 	Milnor number: " + string(milnor(@cuspedge)));
@@ -143,10 +150,14 @@ static proc dp_scheme(poly @p, poly @q, int @y)
 	print("//");	
 	print("// Access these functions by typing @cuspedge and @dpoints");
 	print("// (address sign included!)");
+
+
 		
 	return(@vdimA,
 			vdim(std(@B)),
-			vdim(std(@C))
+			vdim(std(@C)),
+			vdim(std(@mx)),
+			vdim(std(@my))
 			);
 }
 
