@@ -2,77 +2,23 @@
 version="$Id: frontalsurf.lib  2013-12-03 $";
 category="Singularity Theory, Commutative Algebra";
 info="
-LIBRARY:	frontalsurf.lib			Compute geometric invariants of a corank 1
+LIBRARY:	frontals.lib			Compute geometric invariants of a corank 1
 									frontal surface
 
 AUTHORS:	C. Munoz-Cabello,		chmuca@alumni.uv.es
   
 PROCEDURES:
-	dpscheme(p,q,y);				double point scheme of a frontal surface
 	invariants(p, q);				compute geometric frontal invariants
  
 AUXILIARY PROCEDURES:
 	baseringlocal();				checks if basering is local (ds)
+	dp_scheme(p,q,y);				double point scheme of a frontal surface
 	ordering(p, q);					sets a corank 1 frontal in pre-normal form
  ";
 
 	// Required libraries
 //	LIB "presmatrix.lib";		// presmatrix
 	LIB "ring.lib";				// ord_test
-
-//-----------------------------------------------------------------------------
-proc dpscheme(poly @p, poly @q, int @y)
-{
-		// add an auxiliar variable for divided differences
-	ring @src = basering;
-	ring @auxring = 0, @z, ds;
-	def @extring = @src + @auxring;
-	setring @extring;
-
-		// import @p and @q to the extended ring
-	poly @p = imap(@src, @p);
-	poly @q = imap(@src, @q);
-
-		// compute the double point scheme via divided differences
-	poly @P = (@p - subst(@p, var(@y), @z)) / (var(@y) - @z);
-	poly @Q = (@q - subst(@q, var(@y), @z)) / (var(@y) - @z);
-
-		// find its branches
-	poly @cuspedge = diff(@p, var(@y));
-	poly @dpoints = resultant(@P, @Q, @z) / @py^2;
-
-	print("// Cuspidal edges:");
-	print("//	" + string(@cuspedge));
-	print("//");
-	print("// Strict double points:");
-	print("//	" + string(@dpoints));
-	print("//");
-
-		// export both functions to global scope
-	export(@cuspedge);
-	export(@dpoints);
-	
-	print("// Access these functions by typing @cuspedge and @dpoints");
-	print("// (address sign included!)")
-	
-		// compute formulas () from [1]
-	poly @alpha = reduce(@P, @py) / (var(@y) - @z);
-	poly @beta = reduce(@Q, @py) / (var(@y) - @z);
-	ideal @A = @py, @alpha, @beta;
-	int @vdimA = vdim(std(@A));
-
-	setring @src;
-	poly @py = imap(@extring, @py);
-	ideal @B = @py, diff(@py, var(@y));
-	
-	poly @tau = imap(@extring, @tau);
-	ideal @C = @py, @tau;
-
-	return(@vdimA,
-			vdim(std(@B)),
-			vdim(std(@C))
-			);
-}
 
 //-----------------------------------------------------------------------------
 proc invariants(poly @p_aux, poly @q_aux)
@@ -126,6 +72,7 @@ static proc baseringlocal()
 
 //-----------------------------------------------------------------------------
 static proc ordering(poly @p, poly @q)
+// Static procedures cannot be called from the global env
 {
 		// py | qy -> change nothing
 	if (reduce(diff(@q, var(2)), diff(@p, var(2))) == 0)
@@ -145,6 +92,60 @@ static proc ordering(poly @p, poly @q)
 	
 	ERROR("// Not a frontal mapping! Please check "+string(@p)+" and "
 	+string(@q));
+}
+
+//-----------------------------------------------------------------------------
+static proc dp_scheme(poly @p, poly @q, int @y)
+{
+		// add an auxiliar variable for divided differences
+	ring @src = basering;
+	ring @auxring = 0, @z, ds;
+	def @extring = @src + @auxring;
+	setring @extring;
+
+		// import @p and @q to the extended ring
+	poly @p = imap(@src, @p);
+	poly @q = imap(@src, @q);
+
+		// compute the double point scheme via divided differences
+	poly @P = (@p - subst(@p, var(@y), @z)) / (var(@y) - @z);
+	poly @Q = (@q - subst(@q, var(@y), @z)) / (var(@y) - @z);
+
+		// find its branches
+	poly @py = diff(@p, var(@y));
+	poly @tau = resultant(@P, @Q, @z) / @py^2;
+
+	print("// Cuspidal edges:");
+	print("//	@cuspedge = " + string(@py));
+	print("//");
+	print("// Strict double points:");
+	print("//	@dpoints = " + string(@tau));
+	print("//");
+	
+	print("// Access these functions by typing @cuspedge and @dpoints");
+	print("// (address sign included!)");
+	
+		// compute formulas () from [1]
+	poly @alpha = reduce(@P, @py) / (var(@y) - @z);
+	poly @beta = reduce(@Q, @py) / (var(@y) - @z);
+	ideal @A = @py, @alpha, @beta;
+	int @vdimA = vdim(std(@A));
+
+	setring @src;
+	poly @cuspedge = imap(@extring, @py);
+	ideal @B = @cuspedge, diff(@cuspedge, var(@y));
+	
+	poly @dpoints = imap(@extring, @tau);
+	ideal @C = @cuspedge, @dpoints;
+
+		// export both functions to global scope
+	export(@cuspedge);
+	export(@dpoints);
+
+	return(@vdimA,
+			vdim(std(@B)),
+			vdim(std(@C))
+			);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
