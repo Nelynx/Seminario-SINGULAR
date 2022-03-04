@@ -17,6 +17,7 @@ AUXILIARY PROCEDURES:
  ";
 
 	// Required libraries
+	LIB "classify.lib";
 //	LIB "presmatrix.lib";		// presmatrix
 	LIB "ring.lib";				// ord_test
 
@@ -114,16 +115,6 @@ static proc dp_scheme(poly @p, poly @q, int @y)
 		// find its branches
 	poly @py = diff(@p, var(@y));
 	poly @tau = resultant(@P, @Q, @z) / @py^2;
-
-	print("// Cuspidal edges:");
-	print("//	@cuspedge = " + string(@py));
-	print("//");
-	print("// Strict double points:");
-	print("//	@dpoints = " + string(@tau));
-	print("//");
-	
-	print("// Access these functions by typing @cuspedge and @dpoints");
-	print("// (address sign included!)");
 	
 		// compute formulas () from [1]
 	poly @alpha = reduce(@P, @py) / (var(@y) - @z);
@@ -138,10 +129,21 @@ static proc dp_scheme(poly @p, poly @q, int @y)
 	poly @dpoints = imap(@extring, @tau);
 	ideal @C = @cuspedge, @dpoints;
 
-		// export both functions to global scope
+	print("// Cuspidal edges:");
+	print("//	@cuspedge = " + string(@cuspedge));
+	print("// 	Milnor number: " + string(milnor(@cuspedge)));
 	export(@cuspedge);
+	
+	print("//");
+	print("// Strict double points:");
+	print("//	@dpoints = " + string(@dpoints));
+	print("// 	Milnor number: " + string(milnor(@dpoints)));
 	export(@dpoints);
 
+	print("//");	
+	print("// Access these functions by typing @cuspedge and @dpoints");
+	print("// (address sign included!)");
+		
 	return(@vdimA,
 			vdim(std(@B)),
 			vdim(std(@C))
