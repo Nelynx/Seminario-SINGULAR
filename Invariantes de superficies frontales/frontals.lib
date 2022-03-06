@@ -130,13 +130,13 @@ static proc dp_scheme(poly @p, poly @q, int @y)
 	ideal @C = @cuspedge, @dpoints;
 
 	print("// Cuspidal edges:");
-	print("//	Equation: " + string(@cuspedge) + "= 0");
+	print("//	Equation: " + string(@cuspedge) + " = 0");
 	print("// 	Milnor number: " + string(milnor(@cuspedge)));
 	export(@cuspedge);
 	
 	print("//");
 	print("// Strict double points:");
-	print("//	Equation: " + string(@dpoints) + "= 0");
+	print("//	Equation: " + string(@dpoints) + " = 0");
 	print("// 	Milnor number: " + string(milnor(@dpoints)));
 	export(@dpoints);
 
@@ -146,7 +146,7 @@ static proc dp_scheme(poly @p, poly @q, int @y)
 		
 	return(@vdimA,
 			vdim(std(@B)),
-			vdim(std(@C)),
+			vdim(std(@C))
 			);
 }
 
