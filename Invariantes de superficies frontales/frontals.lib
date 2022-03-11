@@ -105,10 +105,8 @@ proc wfinvariants(poly @g, poly @z)
 static proc baseringlocal()
 {
 	option(noredefine);			// hide messages such as "redefining"
-	ring @ring=basering;
 
-	int @local=ord_test(@ring);
-	if (@local!=-1)
+	if (ord_test(basering) != -1)
 	{
 		ERROR("// No local order ring! Get generators using local order
 		(ds)");
