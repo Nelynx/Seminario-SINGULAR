@@ -96,9 +96,9 @@ proc wfinvariants(poly @g, poly @z)
 	int @K = @S * (@w[4] - 4*@w[@leadvar]) div @w[@leadvar];
 	int @T = @K * (@w[4] - 5*@w[@leadvar]) div (6*@w[@leadvar]);
 
-	print("// Number of swallowtails: " + string(@S));
-	print("// Number of cusp-folds: " + string(@K));
-	print("// Number of triple points: " + string(@T));
+	print("// Swallowtails (A_3): " + string(@S));
+	print("// Cusp-folds (A_1A_2): " + string(@K));
+	print("// Triple points (A_1^3): " + string(@T));
 }
 
 //-----------------------------------------------------------------------------
@@ -173,27 +173,25 @@ static proc dp_scheme(poly @p, poly @q, int @y)
 	ideal @C = @cuspedge, @dpoints;
 	int @PT = vdim(std(@C));
 
-	print("// Cuspidal edges:");
-	print("//	Equation: " + string(@cuspedge) + " = 0");
-	print("// 	Milnor number: " + string(milnor(@cuspedge)));
 	export(@cuspedge);
-	
-	print("//");
-	print("// Strict double points:");
-	print("//	Equation: " + string(@dpoints) + " = 0");
-	print("// 	Milnor number: " + string(milnor(@dpoints)));
 	export(@dpoints);
 
-	print("//");	
+	print("// === Isolated singularities ===");
+	print("");
+	print("// Swallowtails (A_3): " + string(@PP));
+	print("// Cusp-folds (A_1A_2): " + string(@PAA - @PP));
+	print("");
+	print("// === Branches of the double point scheme ===");
+	print("// Cuspidal edges:");
+	print("//	" + string(@cuspedge) + " = 0");
+	print("//	Milnor number: " + string(milnor(@cuspedge)));
+	print("");
+	print("// Strict double points:");
+	print("//	" + string(@dpoints) + " = 0");
+	print("// 	Milnor number: " + string(milnor(@dpoints)));
+	print("");	
 	print("// Access these functions by typing @cuspedge and @dpoints");
 	print("// (address sign included!)");
-
-	
-	print("//");
-	print("// Devel info:");
-	print("// PAA'=2S+K+a'T: " + string(@PAA));
-	print("// PP=S: " + string(@PP));
-	print("// PT=S+W+2K+aT: " + string(@PT));
 }
 
 //-----------------------------------------------------------------------------
