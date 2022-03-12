@@ -9,7 +9,7 @@ AUTHORS:	C. Munoz-Cabello,		chmuca@alumni.uv.es
   
 PROCEDURES:
 	invariants(p, q);				compute geometric frontal invariants
-	invariants(p);				
+	wfinvariants(g);				compute geometric frontal invariants
  
 AUXILIARY PROCEDURES:
 	baseringlocal();				checks if basering is local (ds)
@@ -64,32 +64,38 @@ proc invariants(poly @p_aux, poly @q_aux)
 		// computations related to the double point scheme
 	list @sol = dp_scheme(@p, @q, @sigma[2]);
 
-	print("// === Isolated singularities ================");
+	print("// === Isolated singularities ================================");
 	print("// Swallowtails (A_3): " + string(@sol[2]));
 	print("// Cusp-folds (A_1A_2): " + string(@sol[1] - 2*@sol[2]));
 	print("");
-	print("// === Branches of the double point scheme ===");
+	
+	print("// === Branches of the double point scheme ===================");
 	print("// Cuspidal edges:");
 	print("//	" + string(@cuspedge) + " = 0");
 	print("//	Milnor number: " + string(milnor(@cuspedge)));
 	print("");
+	
 	print("// Strict double points:");
 	print("//	" + string(@dpoints) + " = 0");
 	print("// 	Milnor number: " + string(milnor(@dpoints)));
 	print("");
+	
 	print("// You can access these functions from global scope by writing");
 	print("// @cuspedge and @dpoints (address sign included)");
-	
 	print("");
-	print("// === Debug info ============================");
-	print("// PAA: " + string(@sol[1]));
-	print("// PP: " + string(@sol[2]));
-	print("// PT: " + string(@sol[3]));
+	
+	print("// === Debug info ============================================");
+	print("// PAA (=2S+K): " + string(@sol[1]));
+	print("// PP (=S):" + string(@sol[2]));
+	print("// PT (=S+W+2K-3T):" + string(@sol[3]));
+	print("");
 }
 
 //-----------------------------------------------------------------------------
 proc wfinvariants(poly @g, poly @z)
 {	
+	option(noredefine);		// hide messages such as "redefining"
+	
 		// find the weights and weighted degree of @g
 	intvec @w = wdeg(@g);
 
@@ -121,6 +127,9 @@ proc wfinvariants(poly @g, poly @z)
 	print("// Swallowtails (A_3): " + string(@S));
 	print("// Cusp-folds (A_1A_2): " + string(@K));
 	print("// Triple points (A_1^3): " + string(@T));
+	print("// -------------------------------");
+	print("// Size of M_3: " + string(@S+@K+@T));
+	print("");
 }
 
 //-----------------------------------------------------------------------------
