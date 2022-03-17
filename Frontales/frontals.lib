@@ -1,0 +1,229 @@
+///////////////////////////////////////////////////////////////////////////////
+version="$Id: frontalsurf.lib  2013-12-03 $";
+category="Singularity Theory, Commutative Algebra";
+info="
+LIBRARY:	frontals.lib			Compute geometric invariants of a corank 1
+									frontal surface
+AUTHORS:	C. Munoz-Cabello,		chmuca@alumni.uv.es
+  
+PROCEDURES:
+	invariants(p, q);				compute geometric frontal invariants
+	wfinvariants(g);				compute geometric frontal invariants
+ 
+AUXILIARY PROCEDURES:
+	baseringlocal();				checks if basering is local (ds)
+	dp_scheme(p,q,y);				double point scheme of a frontal surface
+	ordering(p, q);					sets a corank 1 frontal in pre-normal form
+	wdeg(g);						weighted degree of a quasihomogeneous
+									polynomial
+REFERENCES:
+	[1] 
+	[2] Marar, W.L., Montaldi, J.A. and Ruas, M.A.S. (1999) Multiplicities of
+	zero-schemes in quasihomogeneous corank-1 singularities 
+ ";
+	// Required libraries
+	LIB "sing.lib";		// milnor
+	LIB "ring.lib";		// ord_test
+//-----------------------------------------------------------------------------
+proc invariants(poly @p_aux, poly @q_aux)
+{
+	baseringlocal();
+	option(noredefine);		// hide messages such as "redefining"
+
+		// check that the basering has 2 variables
+	if (nvars(basering) != 2)
+	{
+		ERROR("/!\ Base ring must have two variables /!\");
+	}
+
+		/* sets the frontal so that p_y divides q_y
+		 * sigma[1] is the x variable
+		 * sigma[2] is the y variable
+		 */
+ 	list @sigma = ordering(@p_aux, @q_aux);
+ 	if (@sigma[3] < @sigma[4])
+ 	{
+ 		poly @p = @p_aux;
+ 		poly @q = @q_aux;
+ 	}
+ 	else
+ 	{
+ 		poly @p = @q_aux;
+ 		poly @q = @p_aux;
+ 	}
+ 	
+ 		// computations related to the double point scheme
+ 	list @sol = dp_scheme(@p, @q, @sigma[2]);
+ 	
+ 	print("=== Isolated singularities ===================================");
+ 	print("// Swallowtails (A_3): " + string(@sol[2]));
+ 	print("// Cusp-folds (A_1A_2): " + string(@sol[1] - 2*@sol[2]));
+ 	print("");
+
+		 	
+	print("=== Branches of the double point scheme ======================");
+	print("___ Cuspidal edges _________________________________");
+	print("//	" + string(@cuspedge) + " = 0");
+	print("//	Milnor number: " + string(milnor(@cuspedge)));
+	print("");
+	
+	print("___ Strict double points ___________________________");
+	print("//	" + string(@dpoints) + " = 0");
+	print("// 	Milnor number: " + string(milnor(@dpoints)));
+	print("");
+	
+	print("// You can access these functions from global scope by writing");
+	print("// @cuspedge and @dpoints (address sign included)");
+	print("");
+	
+	print("=== Debug info ===============================================");
+	print("// PAA (= 2S + K): " + string(@sol[1]));
+	print("// PP (= S):" + string(@sol[2]));
+	print("// PT (= S + W + 2K - 3T):" + string(@sol[3]));
+	print("");
+}
+
+//-----------------------------------------------------------------------------
+proc wfinvariants(poly @g, poly @z)
+{	
+	option(noredefine);		// hide messages such as "redefining"
+	
+	intvec @w = wdeg(@g);	// find the weights and weighted degree of @g
+
+		// find which variable was declared
+	for (int i=1; i <= 3; i=i+1)
+	{
+		if (@z == var(i))
+		{
+			int @leadvar = i;
+		}
+	}
+
+		/* [2] Theorem 1:
+		 * d:				@w[4]
+		 * w_0: 			@w[@leadvar]
+		 * w:				product(@w,1..3)
+		 * Triple points:	l=3, N(P)=6
+		 * Cusp-folds:		l=2, N(P)=1
+		 * Swallowtails:	l=1, N(P)=1
+		 */
+
+		// product from the formula
+	intvec @prod = (@w[4] div @w[@leadvar]) * (1, 1, 1) - (1, 2, 3);
+
+	/* Singular does not like to use the "/" sign for integer division
+	 * (see https://www.singular.uni-kl.de/Manual/4-0-3/sing_466.htm)
+	 * so we need to use `div` instead
+	 */
+	 
+	int @S = @w[@leadvar]^2 div product(@w,1..3) * @prod;
+	int @K = @S * (@w[4] - 4*@w[@leadvar]) div @w[@leadvar];
+	int @T = @K * (@w[4] - 5*@w[@leadvar]) div (6*@w[@leadvar]);
+
+	print(" === Invariants ==================");
+	print("// Swallowtails (A_3): " + string(@S));
+	print("// Cusp-folds (A_1A_2): " + string(@K));
+	print("// Triple points (A_1^3): " + string(@T));
+	print("----------------------------------");
+	print("// Size of M_3: " + string(@S+@K+@T));
+	print("");
+}
+//-----------------------------------------------------------------------------
+static proc baseringlocal()
+{
+	option(noredefine);			// hide messages such as "redefining"
+	if (ord_test(basering) != -1)
+	{
+		ERROR("/!\ No local order ring! Get generators using local order
+		(ds) /!\");
+	}
+}
+
+//-----------------------------------------------------------------------------
+static proc ordering(poly @p, poly @q)
+{
+		// py | qy -> change nothing
+	if (reduce(diff(@q, var(2)), diff(@p, var(2))) == 0)
+		{return(1, 2, 3, 4);}
+		
+		// px | qx -> swap (x, y)
+	if (reduce(diff(@q, var(1)), diff(@p, var(1))) == 0)
+		{return(2, 1, 3, 4);}
+		
+		// qy | py -> swap (p, q)
+	if (reduce(diff(@p, var(2)), diff(@q, var(2))) == 0)
+		{return(1, 2, 4, 3);}
+		
+		// qx | px -> swap (x, y) and (p, q)
+	if (reduce(diff(@p, var(1)), diff(@q, var(1))) == 0)
+		{return(2, 1, 4, 3);}
+
+	ERROR("/!\ Not a frontal mapping! Please check "+string(@p)+" and "
+	+string(@q)+" /!\");
+}
+
+//-----------------------------------------------------------------------------
+static proc dp_scheme(poly @p, poly @q, int @y)
+{
+		// add an auxiliar variable for divided differences
+	ring @src = basering;
+	ring @auxring = 0, @z, ds;
+	def @extring = @src + @auxring;
+	setring @extring;
+	
+		// import @p and @q to the extended ring
+	poly @p = imap(@src, @p);
+	poly @q = imap(@src, @q);
+	
+		// compute the double point scheme via divided differences
+	poly @P = (@p - subst(@p, var(@y), @z)) / (var(@y) - @z);
+	poly @Q = (@q - subst(@q, var(@y), @z)) / (var(@y) - @z);
+	
+		// find its branches
+	poly @py = diff(@p, var(@y));
+	poly @tau = resultant(@P, @Q, @z) / @py^2;
+
+		// compute formulas () from [1]
+	poly @alpha = reduce(@P, @py) / (var(@y) - @z);
+	poly @beta = reduce(@Q, @py) / (var(@y) - @z);
+	ideal @A = @py, @alpha, @beta;
+	int @PAA = vdim(std(@A));
+	
+	setring @src;
+	poly @cuspedge = imap(@extring, @py);
+	ideal @B = @cuspedge, diff(@cuspedge, var(@y));
+	int @PP = vdim(std(@B));
+	
+	poly @dpoints = imap(@extring, @tau);
+	ideal @C = @cuspedge, @dpoints;
+	int @PT = vdim(std(@C));
+	
+	export(@cuspedge, @dpoints);
+	return(@PAA, @PP, @PT, string(@cuspedge), string(@dpoints));
+	}
+
+	//-----------------------------------------------------------------------------
+	static proc wdeg(poly @g)
+	{
+		// check that the basering has 3 variables
+	if (nvars(basering) != 3)
+	{
+		ERROR("/!\ Base ring must have three variables /!\");
+	}
+
+	intvec @w = qhweight(@g);
+
+		// check that @g is quasihomogeneous
+	if (@w == 0)
+	{
+		ERROR("/!\ This procedure only works on quasihomogeneous
+		polynomials /!\");
+	}
+
+	return(@w, deg(subst(@g,
+		var(1), var(1)^@w[1],
+		var(2), var(2)^@w[2],
+		var(3), var(3)^@w[3])
+	));	
+}
+///////////////////////////////////////////////////////////////////////////////
