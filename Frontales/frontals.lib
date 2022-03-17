@@ -45,6 +45,12 @@ proc invariants(poly @p_aux, poly @q_aux)
 	baseringlocal();
 	option(noredefine);		// hide messages such as "redefining"
 
+	// check that the basering has 2 variables
+	if (nvars(basering) != 2)
+	{
+		ERROR("/!\ Base ring must have two variables /!\");
+	}
+
 		/* sets the frontal so that p_y divides q_y
 		 * sigma[1] is the x variable
 		 * sigma[2] is the y variable
@@ -110,11 +116,6 @@ proc wfinvariants(poly @g, poly @z)
 		}
 	}
 
-	if (@leadvar == 0)
-	{
-		ERROR("Please specify a variable!");
-	}
-
 	intvec @diff = @w[4]*(1,1,1) - @w[@leadvar]*(1,2,3);
 	
 		// Singular does not like to use the "/" sign for integer division
@@ -139,8 +140,8 @@ static proc baseringlocal()
 
 	if (ord_test(basering) != -1)
 	{
-		ERROR("// No local order ring! Get generators using local order
-		(ds)");
+		ERROR("/!\ No local order ring! Get generators using local order
+		(ds) /!\");
 	}
 }
 
@@ -164,8 +165,8 @@ static proc ordering(poly @p, poly @q)
 	if (reduce(diff(@p, var(1)), diff(@q, var(1))) == 0)
 		{return(2, 1, 4, 3);}
 	
-	ERROR("// Not a frontal mapping! Please check "+string(@p)+" and "
-	+string(@q));
+	ERROR("/!\ Not a frontal mapping! Please check "+string(@p)+" and "
+	+string(@q)+" /!\");
 }
 
 //-----------------------------------------------------------------------------
@@ -216,7 +217,7 @@ static proc wdeg(poly @g)
 		// check that the basering has 3 variables
 	if (nvars(basering) != 3)
 	{
-		ERROR("Base ring must have three variables!");
+		ERROR("/!\ Base ring must have three variables /!\");
 	}
 
 	intvec @w = qhweight(@g);
@@ -224,7 +225,8 @@ static proc wdeg(poly @g)
 		// check that @g is quasihomogeneous
 	if (@w == 0)
 	{
-		ERROR("This procedure only works on quasihomogeneous polynomials!");
+		ERROR("/!\ This procedure only works on quasihomogeneous
+		polynomials /!\");
 	}
 
 	return(@w, deg(subst(@g,
