@@ -4,6 +4,7 @@ Repositorio para diseñar y reunir funciones de SINGULAR sobre singularidades de
 
 ## Objetivos
 
+
 - [ ] Algoritmo decente para calcular la Ae-codimensión C^n -> C^{n+1} 
 - [ ] Algoritmo decente para calcular la Ae-codimensión C^n -> C^p con p <= n 
 - [ ] Calcular generadores del Ae-normal (Guille y Roberto):

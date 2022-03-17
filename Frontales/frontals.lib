@@ -321,5 +321,3 @@ static proc wdeg(poly g)
  for (int i = 1; i <= size(w); i++) { g = subst(g, var(i), var(i)^w[i]); }
  return(w, deg(g));
 }
-
-///////////////////////////////////////////////////////////////////////////////
