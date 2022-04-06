@@ -8,15 +8,15 @@ LIBRARY: frontals.lib       Compute geometric invariants of a corank 1 frontal
 AUTHORS: C. Munoz-Cabello,  chmuca@alumni.uv.es
 
 PROCEDURES:
- invariants(f);      compute geometric frontal invariants
- is_frontal(f);      check if input is frontal
- wfinvariants(g, z); compute geometric invariants of the discriminant
+ invariants(f);       compute geometric frontal invariants
+ is_frontal(f);       check if input is frontal
+ wfinvariants(g, z);  compute geometric invariants of the discriminant
 ";
 
-LIB "general.lib";		// product
-LIB "presmatrix.lib";	// presmatrix
-LIB "ring.lib";			// ord_test
-LIB "sing.lib";			// milnor
+LIB "general.lib";      // product
+LIB "presmatrix.lib";   // presmatrix
+LIB "ring.lib";         // ord_test
+LIB "sing.lib";         // milnor
 
 //-----------------------------------------------------------------------------
 proc invariants(map f)
@@ -41,6 +41,14 @@ EXAMPLE:  example invariants; shows an example"
 
   // obtain information about f
  list finfo = c1fsurf(f);
+
+  // check frontal mather gaffney criterion
+ if (finfo[5] == 1)
+ {
+  "// ** the geometric invariants are only guaranteed to exist when the singular";
+  "// ** set of the Nash lift is an isolated set!";
+  ERROR("singular set not isolated");
+ }
 
   // double point scheme
  list dpsf = dp_scheme(finfo[2..4]);
@@ -213,8 +221,10 @@ static proc c1fsurf (map f)
 {
  /* Given a frontal f[x,y] = [x, p[x,y], q[x,y]], either p_y | q_y or
   * q_y | p_y.
-  * This procedure assumes f is given as above to find x, y and whether
-  * p_y | q_y or vice versa. */
+  * Assuming q_y = l * p_y, the singular set S of the Nash lifting is given
+  * by the zero locus of p_y and lambda_y.
+  * This procedure assumes f is given as above to find x, y, gcd(p_y, q_y)
+  * and the codimension of S. */
 
  is_frontal(f);
  string source_name = nameof(basering);
@@ -222,8 +232,8 @@ static proc c1fsurf (map f)
 
   proc find_y (map f)
   {
-   if (f[1] == var(1)) { return(var(1), var(2)); }  // x == var(1)
-   if (f[1] == var(2)) { return(var(2), var(1)); }  // x == var(2)
+   if (f[1] == var(1)) { return(var(1), var(2)); }
+   if (f[1] == var(2)) { return(var(2), var(1)); }
 
    "// ** please introduce a map in the form";
    "// **   map f = " + target_name + ", var, p, q";
@@ -233,12 +243,23 @@ static proc c1fsurf (map f)
    ERROR("map not set to prenormal form");
  }
 
- list xy = find_y(f);
+ list xy = find_y(f);          // (x,y)
  poly f2y = diff(f[2], xy[2]);
  poly f3y = diff(f[3], xy[2]);
 
- if (reduce(f3y, f2y) == 0) { return(xy[1], f[2], f[3], xy[2]); }  // p == f2y
- else { return(xy[1], f[3], f[2], xy[2]); }  // p == f3y
+  // return x, p, q, y, codim(Sigma) (in this order)
+ if (reduce(f3y, f2y) == 0)
+ {
+  poly ly = diff(f3y / f2y, y);
+  ideal S = f2y, ly;
+  return(xy[1], f[2], f[3], xy[2], vdim(std(S)));
+ }
+ else
+ {
+  poly ly = diff(f2y / f3y, y);
+  ideal S = f3y, ly;
+  return(xy[1], f[3], f[2], xy[2], vdim(std(S)));
+ }
 }
 
 //-----------------------------------------------------------------------------
