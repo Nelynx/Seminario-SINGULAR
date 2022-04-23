@@ -72,7 +72,7 @@ EXAMPLE:  example invariants; shows an example"
  execute("setring " + string(br_name));
  int @mufC = 2 * @S + @muC;
  number @mufD = @K + @T + 1/2 * (@muD + 1 - @W - @S);
- int @muf = @mufD + @T + 1 - @S - @W;
+ number @muf = @mufD + @T + 1 - @S - @W;
 
  "";
  "Isolated frontal singularities:";
