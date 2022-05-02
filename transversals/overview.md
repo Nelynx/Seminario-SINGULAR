@@ -1,10 +1,10 @@
 **Note:**
 See _Transversal: A Maple Package For Singularity Theory_ for details.
-Since there is an upper bound for the determinacy degree of a G-finite map in terms of its G-codimension, there could be an optional argument to set the maximum degree.
 
 ## Input
 `f\colon F^n \to F^p` (map)
 `G` (group)
+`k` (degree of the jet-space; if left blank, it is considered to be `\infty`, in which case we can test for determinacy using Nakayama's lemma)
 
 ## Step 1
 For the given jet `f`, jet-space degree `k` and tangent space `G`, calculate `Gf` in `J^k(n,p)`.

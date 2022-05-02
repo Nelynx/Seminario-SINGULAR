@@ -7,11 +7,8 @@ LIBRARY: transversal.lib    Complete transversals
 AUTHORS: C. Munoz-Cabello,  chmuca@alumni.uv.es
 
 PROCEDURES:
-   Atangent(f);         compute A-tangent space
-   Ctangent(f);         compute C-tangent space
-   Ktangent(f);         compute K-tangent space
-   Ltangent(f);         compute L-tangent space
-   Rtangent(f);         compute R-tangent space
+   classify(f, G, [k]);     classification of f under G-equivalence using the
+                            method of complete transversals
 ";
 
 //LIB "general.lib";      // product
@@ -45,6 +42,20 @@ example
  
 }
 
+//-----------------------------------------------------------------------------
+proc classify(map f, list #)
+{
+  /* use Nakayama's lemma to determine if 
+   * - save cpu cycles
+   * - stop condition if upper bound for the degree is omitted */
+}
 
+//-----------------------------------------------------------------------------
+static proc determined(ideal i, int k)
+{
+  /* use Nakayama's lemma to determine if 
+   * - save cpu cycles
+   * - stop condition if upper bound for the degree is omitted */
+}
 
 ///////////////////////////////////////////////////////////////////////////////
