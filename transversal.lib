@@ -1,0 +1,48 @@
+///////////////////////////////////////////////////////////////////////////////
+version="$Id: transversal.lib  2022-17-03 $";
+category="Singularities";
+info="
+LIBRARY: transversal.lib    Complete transversals
+
+AUTHORS: C. Munoz-Cabello,  chmuca@alumni.uv.es
+
+PROCEDURES:
+// invariants(f);       compute geometric frontal invariants
+// is_frontal(f);       check if input is frontal
+// wfinvariants(g, z);  compute geometric invariants of the discriminant
+";
+
+//LIB "general.lib";      // product
+//LIB "presmatrix.lib";   // presmatrix
+//LIB "ring.lib";         // ord_test
+//LIB "sing.lib";         // milnor
+
+//-----------------------------------------------------------------------------
+proc invariants(map f)
+"USAGE:   invariants(f);  f = map
+COMPUTE:  invariants of a corank 1 frontal surface, using the formulas from
+          C. Munoz-Cabello, J.J. Nuno-Ballesteros and R. Oset-Sinha's "\"\
+RETURN:   * number of swallowtails (@S), cusp-folds (@K), triple points (@T)
+            and folded Whitney umbrellas (@W) in the disentanglement of f
+          * cuspidal edge (@cuspedge) and double point (@dpoints) curves,
+            along with their Milnor numbers
+          * frontal Milnor number
+REMARK:   This version of invariants is only beta. Please send bugs and
+          comments to: <https://github.com/Nelynx/Seminario-SINGULAR>
+          Known to work on Singular version 4.2.0.
+NOTE:     objects with @ sign are exported to global scope
+EXAMPLE:  example invariants; shows an example"
+{
+ 
+}
+example
+{
+ "EXAMPLE";
+ echo = 2;
+
+ 
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////
