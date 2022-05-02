@@ -14,7 +14,7 @@ Repositorio para diseñar y reunir funciones de SINGULAR sobre singularidades de
   -  p <= n
   -  corrango 1 (Guille y Roberto)
 - [ ] Calcular números de Milnor de los puntos múltiples en corrango 1. Input: germen (comprobar que es de corrango 1). Output: número de milnor de la imagen
-- [ ] Adaptar transversal completa.
+- [ ] Adaptar transversal completa. (Christian)
   - Entender algoritmo de Maple y ver cómo se podría adaptar a Singular
 - [ ] Calcular generadores del Ke-normal (input germen output generadores) (Raúl y Nacho)
   - [ ] Función que devuelva el estable con menos parámetros (input germen output germen)
