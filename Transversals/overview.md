@@ -1,5 +1,6 @@
 **Note:**
 See _Transversal: A Maple Package For Singularity Theory_ for details.
+Since there is an upper bound for the determinacy degree of a G-finite map in terms of its G-codimension, there could be an optional argument to set the maximum degree.
 
 ## Input
 `f\colon F^n \to F^p` (map)
@@ -16,8 +17,13 @@ Since `Lf` is a module over `J^k(n,p)`, it can be identified with a matrix with 
 Reduce `Lf` to echelon form using Gaussian elimination.
 The resulting matrix gives a canonical basis for `Lf`.
 
+### Computing the echelon form on Singular
+Gaussian elimination can be computed via `groebner` (on global ordering) or `std` (local ordering).
+The matrix must be coded as an ideal or a module.
+While these commands admit matrices, results differ, and _A Singular Introduction to Commutative Algebra_ does this casting.
+However, the matrix is sparse, and alternative reduction methods are suggested, so computational costs should be measured down the line.
+
 ## Step 3
 A basis `C` for the complement space is computed via adding monomials.
 
 ## Step 4
-

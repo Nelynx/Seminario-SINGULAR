@@ -7,9 +7,11 @@ LIBRARY: transversal.lib    Complete transversals
 AUTHORS: C. Munoz-Cabello,  chmuca@alumni.uv.es
 
 PROCEDURES:
-// invariants(f);       compute geometric frontal invariants
-// is_frontal(f);       check if input is frontal
-// wfinvariants(g, z);  compute geometric invariants of the discriminant
+   Atangent(f);         compute A-tangent space
+   Ctangent(f);         compute C-tangent space
+   Ktangent(f);         compute K-tangent space
+   Ltangent(f);         compute L-tangent space
+   Rtangent(f);         compute R-tangent space
 ";
 
 //LIB "general.lib";      // product
