@@ -7,7 +7,7 @@ LIBRARY: transversal.lib    Complete transversals
 AUTHORS: C. Munoz-Cabello,  chmuca@alumni.uv.es
 
 PROCEDURES:
-   classify(f, G, [k]);     classification of f under G-equivalence using the
+   classify(f, G, [k, j]);  classification of f under G-equivalence using the
                             method of complete transversals
 ";
 
@@ -44,50 +44,98 @@ example
 
 //-----------------------------------------------------------------------------
 proc classify(map f, char G, list #)
+"USAGE:   classify(f, G, [k, j]);  f = map, G = char, k,j = int
+COMPUTE:
+RETURN:
+REMARK:
+NOTE:
+EXAMPLE:"
 {
   /* optional parameters are declared as `list #`
    * (list is a polymorphism; see
    * https://www.singular.uni-kl.de/Manual/4-0-3/sing_44.htm) */
 
-  if (G == 'R') {TR(); break;}
-  if (G == 'L') {TL(); break;}
-  if (G == 'C') {TC(); break;}
+ /* #[1]: degree of the jet-space
+  * #[2]: fix terms up to this degree */
+
+  if (#[1] < mapdeg(f))
+    { ERROR("degree of map higher than degree of jet-space"); }
+
+    /* you can actually make these calculations more concise beacuse
+     * all that differs is the base module that is going to be multiplied by
+     * stuff down the line!
+     * so just set a certain module and make it go through the "determined
+     * lift generator"
+     * there is something that does worry me, which is setting a failsafe in
+     * case the user tries to use something that is not finitely determined */
+  if (G == 'C') {TC(f, #); break;}
+  if (G == 'L') {TL(f, #); break;}
+  if (G == 'R') {TR(f, #); break;}
+
+  if (G == 'A')
+  {
+    TL(f, #) + TR(f, #);
+  }
+  
+  if (G == 'K')
+  {
+    TC(f, #) + TR(f, #);
+  }  
 }
 
 //-----------------------------------------------------------------------------
 static proc determined(ideal i, int k)
 {
-  /* use Nakayama's lemma to determine if 
+  /* use Nakayama's lemma
    * - save cpu cycles
    * - stop condition if upper bound for the degree is omitted */
+}
+
+//-----------------------------------------------------------------------------
+static proc mapdeg(map f)
+{
+  /* find the highest degree among the components of f
+   * (affected by lexicographic ordering) */
+   
+  int degf = 1;
+  
+  for (int i = 1; i <= size(preimage(f)); i++)
+    { if (deg(f[i]) > degf) {degf = deg(f[i]);} }
+
+  return degf;
 }
 
 //-----------------------------------------------------------------------------
 static proc TC(map f, list #)
 {
   // C-tangent jet-space
+  
+  /* #[1]: degree of the jet-space
+   * #[2]: fix terms up to this degree */
 
-   int upperbound = #[1];  // upper bound for the degree of the jet-space
-   int fixdeg = #[2];      // fix terms of degree <= `fixdeg`
+   while ()
+   {
+   	 
+   }
 }
 
 //-----------------------------------------------------------------------------
-static proc TL(map f, int upperbound, int fixdeg)
+static proc TL(map f, list #)
 {
   // L-tangent jet-space
 
-  int upperbound = #[1];  // upper bound for the degree of the jet-space
-  int fixdeg = #[2];      // fix terms of degree <= `fixdeg`
+  /* #[1]: degree of the jet-space
+   * #[2]: fix terms up to this degree */
 
 }
 
 //-----------------------------------------------------------------------------
-static proc TR(map f, int upperbound, int fixdeg)
+static proc TR(map f, list #)
 {
   // R-tangent jet-space
  	
-  int upperbound = #[1];  // upper bound for the degree of the jet-space
-  int fixdeg = #[2];      // fix terms of degree <= `fixdeg`	
+  /* #[1]: degree of the jet-space
+   * #[2]: fix terms up to this degree */
 }
 
 ///////////////////////////////////////////////////////////////////////////////
