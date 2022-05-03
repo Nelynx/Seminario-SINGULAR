@@ -43,8 +43,8 @@ example
 }
 
 //-----------------------------------------------------------------------------
-proc classify(map f, char G, list #)
-"USAGE:   classify(f, G, [k, j]);  f = map, G = char, k,j = int
+proc classify(map f, list #)
+"USAGE:   classify(f, [G, k, j]);  f = map, G = string, k,j = int
 COMPUTE:
 RETURN:
 REMARK:
@@ -53,34 +53,56 @@ EXAMPLE:"
 {
   /* optional parameters are declared as `list #`
    * (list is a polymorphism; see
-   * https://www.singular.uni-kl.de/Manual/4-0-3/sing_44.htm) */
+   * https://www.singular.uni-kl.de/Manual/4-0-3/sing_44.htm)
+   *
+   * #[1]: group
+   * #[2]: degree of the jet-space
+   * #[3]: fix terms up to this degree */
 
- /* #[1]: degree of the jet-space
-  * #[2]: fix terms up to this degree */
+  eh_classify(f, #);  // exception handling
 
-  if (#[1] < mapdeg(f))
-    { ERROR("degree of map higher than degree of jet-space"); }
-
-    /* you can actually make these calculations more concise beacuse
-     * all that differs is the base module that is going to be multiplied by
-     * stuff down the line!
-     * so just set a certain module and make it go through the "determined
-     * lift generator"
-     * there is something that does worry me, which is setting a failsafe in
-     * case the user tries to use something that is not finitely determined */
-  if (G == 'C') {TC(f, #); break;}
-  if (G == 'L') {TL(f, #); break;}
-  if (G == 'R') {TR(f, #); break;}
+  /* if `f` is a jet in `J^k(n,p)` and `j < k`, `TG_jf = m^{j+1} L_Gf`
+   *
+   * the definition of `Lf` depends on `G`, but the complete transversals
+   * method works the same for `G = A, C, K, L, R` */
+     
+  if (G == 'C')
+  {
+    int p = size(preimage(f));
+    module L = f * freemodule(p);
+  }
+  if (G == 'L')
+    {}
+  if (G == 'R')
+    { module L = jacob(f); }
 
   if (G == 'A')
   {
-    TL(f, #) + TR(f, #);
   }
   
   if (G == 'K')
   {
-    TC(f, #) + TR(f, #);
+    int p = size(preimage(f));
+    module L = jacob(f) + f * freemodule(p);
   }  
+}
+
+//-----------------------------------------------------------------------------
+static proc excep_handle_classify(f, #)
+{
+   if (size(#) == 0)
+   {
+      if (size(preimage(f)) == 1) { string G = "R"; }
+  	  else { string G = "A"; }
+  }
+  else
+  {
+     if (size(#[1]) > 1)
+       { ERROR("first argument must be a single letter!"); }
+    
+  	 if (#[2] < max(mapdeg(f)))
+  	   { ERROR("degree of " + nameof(f) + " higher than " + #[1]); }
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -94,48 +116,24 @@ static proc determined(ideal i, int k)
 //-----------------------------------------------------------------------------
 static proc mapdeg(map f)
 {
-  /* find the highest degree among the components of f
-   * (affected by lexicographic ordering) */
+  /* turn the `deg` procedure into a map (see
+   * https://en.wikipedia.org/wiki/Map_(higher-order_function)
+   * for details) */
+
+  intvec degf;
    
-  int degf = 1;
-  
-  for (int i = 1; i <= size(preimage(f)); i++)
-    { if (deg(f[i]) > degf) {degf = deg(f[i]);} }
+  for (int i = 1; i <= size(preimage(f)); i++) { degf[i] = deg(f[i]); }
 
   return degf;
 }
 
 //-----------------------------------------------------------------------------
-static proc TC(map f, list #)
+static proc transversals (module L)
 {
-  // C-tangent jet-space
-  
-  /* #[1]: degree of the jet-space
-   * #[2]: fix terms up to this degree */
-
    while ()
    {
    	 
    }
-}
-
-//-----------------------------------------------------------------------------
-static proc TL(map f, list #)
-{
-  // L-tangent jet-space
-
-  /* #[1]: degree of the jet-space
-   * #[2]: fix terms up to this degree */
-
-}
-
-//-----------------------------------------------------------------------------
-static proc TR(map f, list #)
-{
-  // R-tangent jet-space
- 	
-  /* #[1]: degree of the jet-space
-   * #[2]: fix terms up to this degree */
 }
 
 ///////////////////////////////////////////////////////////////////////////////
