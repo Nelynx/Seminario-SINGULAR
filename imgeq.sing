@@ -17,4 +17,3 @@ presmatrix(f, i);
 setring RTPr;
 
 "The generating equation is: " + print(fitting(PM, 0));
-quit;
