@@ -1,0 +1,108 @@
+///////////////////////////////////////////////////////////////////////////////
+version="$Id: frontalsurf.lib  2022-17-03 $";
+category="Singularities";
+info="
+LIBRARY: frontals.lib       compute logarithmic vector fields on the discriminant
+
+AUTHORS: C. Munoz-Cabello,  chmuca@alumni.uv.es
+
+PROCEDURES:
+ derlog(f);           compute logarithmic vector fields on the discriminant of f
+ equation(f);         implicit equation for the image of f
+";
+
+LIB "presmatrix.lib";  // presmatrix
+
+//-----------------------------------------------------------------------------
+proc derlog(list f)
+"USAGE:   derlog(f);  f = poly or map
+COMPUTE:  logarithmic vector fields on the discriminant of f (if f is a map)
+          or the hypersurface of equation f = 0 (if f is a function), using
+          the module of relations of syzygys
+RETURN:   Killing (@K[1]..@K[n]) and Euler (@E) vector fields of the
+          corresponding hypersurface
+REMARK:   This version of derlog is only beta. Please send bugs and
+          comments to: <https://github.com/Nelynx/Seminario-SINGULAR>
+          Known to work on Singular version 4.2.0.
+NOTE:     objects with @ sign are exported to global scope
+EXAMPLE:  example derlog; shows an example"
+{
+ / * The derlog of the hypersurface g = 0 is defined as the vector fields X
+ / * such that Xg is a multiple of g.
+ / * The generators for such an algebra verify that [X-k]g=0 for some scalar k,
+ / * and can be found as the relations module of
+ / *
+ / *   dg         dg
+ / *  ----, ..., ----, g
+ / *   x1         xn                                                           */
+
+ if (size(l) > 1) { ERROR("only one argument at a time!"); }
+
+ // if user inputs a map, compute the discriminant and obtain its generating
+ // function
+ if (typeof(l[1]) == "map")
+ {
+  // check that the map goes from Kn to K(n+1)
+  // (i do not know how to compute discriminants on singular)
+
+  "// Computing implicit function of " nameof(f) + "...";
+  if (nvars(preimage(f)) != nvars(basering) + 1)
+  {
+   "// Please introduce a map from K^n to K^(n+1)!";
+   ERROR("not a discriminant");
+  }
+
+  ideal @i = 0;
+  export(@i);                  // we need to export @i to use presmatrix
+  
+  presmatrix(f, @i);
+  setring RTPr;
+  ideal g = fitting(PM, 0);
+  
+  return derlog(g[1]);
+ }
+ 
+ int n = nvars(basering);
+ matrix @X[n,n+1];
+   
+ for (int i = 1; i <= n; i++) { G = G + diff(g, var(i)); }
+ ideal G = G + g;
+
+ / * The relations are given as a block matrix
+ / *
+ / *    X1  X2 ... X(n+1)
+ / *    -----------------
+ / *    S1  S2 ... S(n+1)
+ / *
+ / * If Sk == 0, Xk is a Killing field; otherwise, it is an Euler field. */
+
+ module dl = syz(G);
+
+ for (i = 1; i <= n+1; i++)
+ {
+  if (syz(G)[n+1,i] != 0)
+  {
+   matrix @Euler[n,1] = submat(syz(G), 1..n, i);
+   intvec k[n];
+
+   // We make a list of all the indices containing Killing fields
+   if (i == 1) { k = 2..n+1 }
+   else
+   {
+   	if (i == n+1) { k = 1..n }
+    else { k = 1..i-1,i+1..n+1 }
+   }
+  
+   matrix @Kill[n,n] = submat(syz(G), 1..n, k);
+  }
+
+ "Killing fields (@Kill):";
+ print(@Kill);
+
+ "Euler fields (@Euler):";
+ print(@Euler);
+
+ "Use the @Kill and @Euler variables to access them from global scope!";
+}
+
+///////////////////////////////////////////////////////////////////////////////
