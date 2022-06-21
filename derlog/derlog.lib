@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-version="$Id: derlog.lib  2022-17-03 $";
+version="$Id: derlog.lib  2022-21-06 $";
 category="Singularities";
 info="
 LIBRARY: derlog.lib         compute logarithmic vector fields
@@ -9,7 +9,6 @@ AUTHORS: C. Munoz-Cabello,  chmuca@alumni.uv.es
 PROCEDURES:
     derlog(f);              compute logarithmic vector fields on the
                             discriminant of f
-    equation(f);            implicit equation for the image of f
 ";
 
 LIB "presmatrix.lib";        // presmatrix
@@ -37,34 +36,13 @@ EXAMPLE:    example derlog; shows an example"
     /*     ----, ..., ----, g
     /*      x1         xn                                                      */
 
-    if (size(f) > 1) { ERROR("only one argument at a time!"); }
-
     // if user inputs parametric equations, obtain its generating function
     if (typeof(f[1]) == "map")
     {
   	    print("// Computing implicit function of " + nameof(f));
   	    "";
   	    
-        // check that the map goes from Kn to K[n+1]
-        if (nvars(preimage(f[1])) != nvars(basering) + 1)
-        {
-            "// Please introduce a map from K^n to K^[n+1]";
-            ERROR("not a discriminant");
-        }
- 
-        ideal @i = 0;
-        export(@i);                  // we need to export @i to use presmatrix
- 
-        presmatrix(f[1], @i);
- 
-        ring target = preimage(f[1]);
-        setring RTPr;
-        poly g = fitting(PM, 0)[1];
- 
-        setring target;
-        poly g = imap(RTPr, g);
-   
-        return(derlog(g));
+        return(derlog(equation(f[1])));
     }
   
     "// Computing relations of the logarithmic vector fields";
@@ -75,34 +53,6 @@ EXAMPLE:    example derlog; shows an example"
  
     ideal F = f[1];
     for (int i = 1; i <= n; i++) { F = F + diff(f[1], var(i)); }
-    print(F);
- 
-    /* The relations are given as a block matrix
-    /*
-    /*     S1  S2 ... Sp
-    /*     -------------
-    /*     X1  X2 ... Xp
-    /*
-    /* If Sk == 0, Xk is a Killing field; otherwise, it is an Euler field. */
- 
-    for (i = 1; i <= ncols(syz(F)); i++)
-    {
-        if (syz(F)[1,i] != 0)
-        {
-            matrix @Euler[n][1] = submat(syz(F), 2..nrows(syz(F)), i);
-            intvec k;
- 
-            // We make a list of all the indices containing Killing fields
-            if (i == 1) { k = 2..ncols(syz(F)); }
-            else
-            {
-                if (i == ncols(syz(F))) { k = 2..ncols(syz(F)); }
-                else { k = 1..i-1,i+1..ncols(syz(F)); }
-            }
- 
-            matrix @Kill[n][n] = submat(syz(F), 1..nrows(syz(F))-1, k);
-        }
-    }
   
     "// Killing fields (@Kill):";
     print(@Kill);
@@ -111,10 +61,59 @@ EXAMPLE:    example derlog; shows an example"
     "// Euler fields (@Euler):";
     print(@Euler);
     "";
-  
-    export(@Kill, @Euler);
+
     "// Use the @Kill and @Euler variables to access them from global scope!";
     "// (remember to change basering first)";
+}
+
+//-----------------------------------------------------------------------------
+static proc equation(map f)
+{
+	// check that the map goes from Kn to K[n+1]
+    if (nvars(preimage(f)) != nvars(basering) + 1)
+    {
+        "// Please introduce a map from K^n to K^[n+1]";
+        ERROR("dimension mismatch");
+    }
+
+    ideal @i = 0;
+    export(@i);                  // we need to export @i to use presmatrix
+
+    presmatrix(f[1], @i);
+
+    ring target = preimage(f[1]);
+    setring RTPr;
+    poly g = fitting(PM, 0)[1];
+
+    setring target;
+    return imap(RTPr, g);
+}
+
+//-----------------------------------------------------------------------------
+static proc killeuler(module rels)
+{
+    /* The relation module m is given as a block matrix
+    /*
+    /*     S1  S2 ... Sp
+    /*     -------------
+    /*     X1  X2 ... Xp
+    /*
+    /* If Sk == 0, Xk is a Killing field; otherwise, it is an Euler field. */
+    
+    for (i = 1; i <= ncols(rels); i++)
+    {
+        if (rels[1,i] != 0)
+        {
+            matrix @Euler[n][1] = submat(m, 2..nrows(rels), i);
+
+            // We make a list of all the indices containing Killing fields
+            intvec k = delete(1..ncols(rels), i);
+ 
+            matrix @Kill[n][n] = submat(rels, 2..nrows(rels), k);
+        }
+    }
+
+    export(@Kill, @Euler);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
