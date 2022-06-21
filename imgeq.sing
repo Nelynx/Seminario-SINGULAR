@@ -1,7 +1,7 @@
 /* To run this script:
 /* - run Singular from the directory where you have this
-/*   script and write `< imgeq.txt`
-/* - write `Singular imgeq.txt` from the directory where
+/*   script and write `< imgeq.sing`
+/* - write `Singular imgeq.sing` from the directory where
 /*   you have this script                               */
 
 ring target = 0, (x,y,z), ds;
