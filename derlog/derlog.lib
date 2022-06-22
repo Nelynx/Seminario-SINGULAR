@@ -70,17 +70,13 @@ EXAMPLE:  example derlog; shows an example"
 
     /* The relations are given as a block matrix
     /*
-    /*    S1  S2 ... Sp
+    /*    S1  S2 ... Sp    (first row)
     /*    -------------
     /*    X1  X2 ... Xp
     /*
     /* If Sk == 0, Xk is a Killing field; otherwise, it is an Euler field. */
 
-    "// first row indicates if the column behind is Killing or Euler";
-    "// 0     == Killing";
-    "// Not 0 == Euler";
-
-    for (i = 1; i <= nrows(syz(F)); i++)
+    for (i = 1; i <= ncols(syz(F)); i++)
     {
         if (syz(F)[1,i] != 0)
         {
@@ -94,10 +90,10 @@ EXAMPLE:  example derlog; shows an example"
         }
     }
 
-    print("Killing fields (X(" + nameof(f) + ") = 0):");
+    print("Killing fields (X(g) = 0):");
     print(@Kill);
 
-    print("Euler fields (X(" + nameof(f) + ") = " + print(lambda) + nameof(f) + "):");
+    print("Euler fields (X(g) = "+ print(lambda) + "g):");
     print(@Euler);
     ;
 
