@@ -48,6 +48,20 @@ EXAMPLE:  example derlog; shows an example"
             ERROR("dimension mistmatch");
         }
 
+		if (nvars (preimage(f[1])) == nvars(basering))
+		{
+			ideal Jf = jacob(ideal(f[1]));
+			for (int i = 1; i <= nvars(basering); i++)
+			{ Jf = subst(Jf, var(i), 0); }
+			
+			if (rank(Jf) < nvars (preimage(f[1])) - 1)
+			{ ERROR("input does not have corank 1"); } 
+
+			
+			
+		}
+		// presmatrix.lib is known to OOM in corank 2
+		
         // compute the generating function using Fitting ideals
         ideal @i = 0;
         export (@i);                  // we need to export @i to use presmatrix
