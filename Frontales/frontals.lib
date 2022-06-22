@@ -10,6 +10,7 @@ AUTHORS: C. Munoz-Cabello,  chmuca@alumni.uv.es
 PROCEDURES:
  invariants(f);       compute geometric frontal invariants
  is_frontal(f);       check if input is frontal
+ wavefront(f);		  compute the discriminant of a corank 1 map 
  wfinvariants(g, z);  compute geometric invariants of the discriminant
 ";
 
@@ -126,6 +127,55 @@ proc is_frontal(map f)
  {
  	ERROR("not a frontal map");
  }
+}
+
+//-----------------------------------------------------------------------------
+proc wavefront(poly f, poly y)
+"USAGE:   wavefront(f, z);  f, z = poly
+COMPUTE:  discriminant of G(x, y)=(x, g(x, y)), which is a front when
+          diff(g, y) has a regular point at 0 due to a result by Arnol'd
+RETURN:   generating function of the discriminant of G
+REMARK:   * x can have any number of components
+          * This version of wfinvariants is only beta. Please send bugs and
+          comments to: <https://github.com/Nelynx/Seminario-SINGULAR>
+          Known to work on Singular version 4.2.0.
+NOTE:     objects with @ sign are exported to global scope
+EXAMPLE:  example wwavefront; shows an example"
+{
+	baseringlocal();
+	
+    if(rvar(y) == 0)
+    { ERROR("variable not in base ring"); }
+
+	/* Given a map F[x,y] = [x, f[x, y]] with diff[f, y] smooth, the
+	/* discriminant is given by the equation
+	/*
+	/*    Res(y - f(x, Y), diff(f, Y)(x, Y), Y) = 0
+	/*
+	/* where [X, Y] are coordinates in the target. 
+	/* In particular, the discriminant is a front (Arnol'd). */
+
+	ring source = basering;
+	ring ext = char(source), @Y, ds;
+	def source_ext = source + ext;
+	setring source_ext;
+
+	poly fy = subst(diff(f, y), y, @Y);
+	f = subst(f, y, @Y);
+
+	if (milnor(fy) == 0)
+	{ "// the discriminant is a front!"; }
+	else
+	{ "// the discriminant is not a front!"; }
+	
+	"";
+
+	poly disc = resultant(fy, f-y, @Y);
+
+	"// the discriminant of this map is given by the equation:"
+	print("// " + disc + " = 0");
+	
+	return (disc);
 }
 
 //-----------------------------------------------------------------------------
