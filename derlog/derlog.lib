@@ -1,119 +1,107 @@
 ///////////////////////////////////////////////////////////////////////////////
-version="$Id: derlog.lib  2022-21-06 $";
+version="$Id: derlog.lib  2022-17-03 $";
 category="Singularities";
 info="
-LIBRARY: derlog.lib         compute logarithmic vector fields
+LIBRARY: derlog.lib           compute logarithmic vector fields
 
-AUTHORS: C. Munoz-Cabello,  chmuca@alumni.uv.es
+AUTHORS: C. Munoz-Cabello,    chmuca@alumni.uv.es
 
 PROCEDURES:
-    derlog(f);              compute logarithmic vector fields on the
-                            discriminant of f
+    derlog(f);                 compute logarithmic vector fields
 ";
 
-LIB "presmatrix.lib";        // presmatrix
+LIB "presmatrix.lib";  // presmatrix
 
 //-----------------------------------------------------------------------------
 proc derlog(list f)
-"USAGE:     derlog(f);  f = poly or map
-COMPUTE:    logarithmic vector fields on the discriminant of f (if f is a map)
-              or the hypersurface of equation f = 0 (if f is a function), using
-              the module of relations of syzygys
-RETURN:     Killing (@K[1]..@K[n]) and Euler (@E) vector fields of the
-              corresponding hypersurface
-REMARK:     This version of derlog is only beta. Please send bugs and
-              comments to: <https://github.com/Nelynx/Seminario-SINGULAR>
-              Known to work on Singular version 4.2.0.
-NOTE:       objects with @ sign are exported to global scope
-EXAMPLE:    example derlog; shows an example"
+"USAGE:   derlog(f);  f = poly or map
+COMPUTE:  logarithmic vector fields on the discriminant of f (if f is a map)
+          or the hypersurface of equation f = 0 (if f is a function), using
+          the module of relations of syzygys
+RETURN:   Killing (@K[1]..@K[n]) and Euler (@E) vector fields of the
+          corresponding hypersurface
+REMARK:   This version of derlog is only beta. Please send bugs and
+          comments to: <https://github.com/Nelynx/Seminario-SINGULAR>
+          Known to work on Singular version 4.2.0.
+NOTE:     objects with @ sign are exported to global scope
+EXAMPLE:  example derlog; shows an example"
 {
     /* The derlog of the hypersurface g = 0 is defined as the vector fields X
     /* such that Xg is a multiple of g.
-    /* The generators for such an algebra verify that [X-k]g=0 for some scalar
-    /* k, and can be found as the relations module of
+    /* The generators for such an algebra verify that [X-k]g=0 for some
+    /* scalar k, and can be found as the relations module of
     /*
-    /*      dg         dg
-    /*     ----, ..., ----, g
-    /*      x1         xn                                                      */
+    /*   dg         dg
+    /*  ----, ..., ----, g
+    /*   x1         xn                                                       */
 
-    // if user inputs parametric equations, obtain its generating function
+    // if user inputs a map, compute the discriminant and obtain its generating
+    // function
     if (typeof(f[1]) == "map")
     {
-  	    print("// Computing implicit function of " + nameof(f));
-  	    "";
-  	    
-        return(derlog(equation(f[1])));
+        print("// Computing implicit function of " + nameof(f));
+
+        // check that the map goes from Kn to K(n+1)
+        if (nvars(preimage(f[1])) != nvars(basering) + 1)
+        {
+            "// Please introduce a map from K^n to K^(n+1)!";
+            ERROR("dimension mistmatch");
+        }
+
+        // compute the generating function using Fitting ideals
+        ideal @i = 0;
+        export (@i);                  // we need to export @i to use presmatrix
+        presmatrix(f[1], @i);
+        
+        ring target = preimage(f[1]);
+
+        setring RTPr;
+        ideal g = fitting(PM, 0);
+
+        setring target;
+        ideal g = imap(RTPr, g);
+        return (derlog(g[1]));
     }
-  
-    "// Computing relations of the logarithmic vector fields";
-    "";
-  
+ 
     int n = nvars(basering);
-    matrix @X[n][n+1];
- 
-    ideal F = f[1];
+
+    ideal F = F + f[1];
     for (int i = 1; i <= n; i++) { F = F + diff(f[1], var(i)); }
-  
-    "// Killing fields (@Kill):";
-    print(@Kill);
-    "";
- 
-    "// Euler fields (@Euler):";
-    print(@Euler);
-    "";
 
-    "// Use the @Kill and @Euler variables to access them from global scope!";
-    "// (remember to change basering first)";
-}
-
-//-----------------------------------------------------------------------------
-static proc equation(map f)
-{
-	// check that the map goes from Kn to K[n+1]
-    if (nvars(preimage(f)) != nvars(basering) + 1)
-    {
-        "// Please introduce a map from K^n to K^[n+1]";
-        ERROR("dimension mismatch");
-    }
-
-    ideal @i = 0;
-    export(@i);                  // we need to export @i to use presmatrix
-
-    presmatrix(f[1], @i);
-
-    ring target = preimage(f[1]);
-    setring RTPr;
-    poly g = fitting(PM, 0)[1];
-
-    setring target;
-    return imap(RTPr, g);
-}
-
-//-----------------------------------------------------------------------------
-static proc killeuler(module rels)
-{
-    /* The relation module m is given as a block matrix
+    /* The relations are given as a block matrix
     /*
-    /*     S1  S2 ... Sp
-    /*     -------------
-    /*     X1  X2 ... Xp
+    /*    S1  S2 ... Sp
+    /*    -------------
+    /*    X1  X2 ... Xp
     /*
     /* If Sk == 0, Xk is a Killing field; otherwise, it is an Euler field. */
-    
-    for (i = 1; i <= ncols(rels); i++)
+
+    "// first row indicates if the column behind is Killing or Euler";
+    "// 0     == Killing";
+    "// Not 0 == Euler";
+
+    for (i = 1; i <= nrows(syz(F)); i++)
     {
-        if (rels[1,i] != 0)
+        if (syz(F)[1,i] != 0)
         {
-            matrix @Euler[n][1] = submat(m, 2..nrows(rels), i);
+            matrix @Euler = submat(syz(F), 2..nrows(syz(F)), i);
+            poly lambda = syz(F)[1,i];
 
             // We make a list of all the indices containing Killing fields
-            intvec k = delete(1..ncols(rels), i);
- 
-            matrix @Kill[n][n] = submat(rels, 2..nrows(rels), k);
+            intvec k = delete(1..ncols(syz(F)), i);
+   
+            matrix @Kill = submat(syz(F), 2..nrows(syz(F)), k);
         }
     }
 
-    export(@Kill, @Euler);
+    print("Killing fields (X(" + nameof(f) + ") = 0):");
+    print(@Kill);
+
+    print("Euler fields (X(" + nameof(f) + ") = " + print(lambda) + nameof(f) + "):");
+    print(@Euler);
+    ;
+
+    "Use the @Kill and @Euler variables to access them from global scope!";
 }
 
 ///////////////////////////////////////////////////////////////////////////////
