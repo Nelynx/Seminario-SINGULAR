@@ -1,0 +1,65 @@
+///////////////////////////////////////////////////////////////////////////////
+version="$Id: derlog.lib  2023-07-11 $";
+category="Singularities";
+info="
+LIBRARY: derlog.lib           compute logarithmic vector fields
+
+AUTHORS: C. Munoz-Cabello,    christian.munoz@uv.es
+
+PROCEDURES:
+    derlog(I);                compute logarithmic vector fields
+";
+
+//-----------------------------------------------------------------------------
+proc derlog(ideal I)
+"USAGE:   derlog(I);  I = ideal
+COMPUTE:  logarithmic vector fields on the complete intersection V(I)
+RETURN:   module of logarithmic vector fields
+REMARK:   This version of derlog is only beta. Please send bugs and
+          comments to: <https://github.com//Seminario-SINGULAR>
+          Known to work on Singular version 4.2.1.
+NOTE:     objects with @ sign are exported to global scope
+EXAMPLE:  example derlog; shows an example"
+{
+    /* The derlog of a complete intersection singularity V(I) is defined as
+    /* the space of vector fields X tangent to V(I).
+    /* The generators for such an algebra verify that [X-k]g=0 for some
+    /* scalar k, and can be found as the relations module of
+    /*
+    /*   dg         dg
+    /*  ----, ..., ----, g
+    /*   x1         xn                                                       */
+ 
+    ideal generators = I;
+
+    int n = nvars(basering);
+    for(int i=1; i <= n; i++)
+        { generators = generators, diff(I, var(i)); }
+   
+    /* The relations are given as a block matrix
+    /*
+    /*    S1  S2 ... Sp    (first row)
+    /*    -------------
+    /*    X1  X2 ... Xp
+    /*
+    /* If Sk == 0, Xk is a Killing field; otherwise, it is an Euler field. */
+
+    matrix relations_pre = syz(generators);
+    int p = ncols(relations_pre);
+    
+    matrix relations[n][p] = relations_pre[2..n+1, 1..p];
+    return(relations);
+}
+example
+{
+    "EXAMPLE";
+    echo = 2;
+
+    ring source = 0, (X, Y, Z), ds;
+    
+    // Whitney umbrella
+    poly f = Z2-X2Y;
+    derlog(f);
+}
+
+///////////////////////////////////////////////////////////////////////////////
